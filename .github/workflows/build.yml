@@ -22,11 +22,14 @@ jobs:
         shell: bash
         run: echo "Runner is ready"
       - name: Checkout repository
+      - name: Check repository structure
+        shell: bash
+        run: bash scripts/check-repository.sh "$PROJECT_PATH"
         uses: actions/checkout@v4
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+          dotnet-version: ${{ env.DOTNET_VERSION }}
       - name: Restore dependencies
         shell: bash
         run: dotnet restore "$PROJECT_PATH"
@@ -36,3 +39,13 @@ jobs:
       - name: Run project
         shell: bash
         run: dotnet run --project "$PROJECT_PATH" --configuration Release --no-build
+      - name: Publish project
+        shell: bash
+        run: dotnet publish "$PROJECT_PATH" --configuration Release --no-restore --output ./artifacts/app
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-${{ github.sha }}
+          path: ./artifacts/app
+          if-no-files-found: error
+          retention-days: 7
